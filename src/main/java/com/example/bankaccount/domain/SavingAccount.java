@@ -1,6 +1,7 @@
 package com.example.bankaccount.domain;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.*;
 
 @Entity
@@ -9,14 +10,26 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class SavingAccount extends BankAccount{
+@ToString
+@EqualsAndHashCode
+public class SavingAccount{
+    @Id
+    private String accountNumber;
+    private double balance;
     private double depositLimit;
 
-    @Override
     public void deposit(double amount) {
         if (this.getBalance() + amount > this.depositLimit) {
-            return;
+            throw new IllegalArgumentException("Deposit limit exceeded");
         }
-        super.deposit(amount);
+        this.balance += amount;
+    }
+
+    public boolean withdraw(double amount) {
+        if (amount > this.balance) {
+            return false;
+        }
+        this.balance -= amount;
+        return true;
     }
 }
