@@ -4,10 +4,11 @@ import com.example.bankaccount.domain.BankAccount;
 import com.example.bankaccount.domain.Transaction;
 import com.example.bankaccount.domain.TransactionType;
 import com.example.bankaccount.repository.BankAccountRepository;
-import com.example.bankaccount.repository.TransactionRepository;
 import com.example.bankaccount.service.bankaccount.BankAccountService;
+import com.example.bankaccount.service.transaction.TransactionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -17,9 +18,10 @@ import java.util.Optional;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Qualifier("bankAccountServiceImpl")
 public class BankAccountServiceImpl implements BankAccountService {
     private final BankAccountRepository bankAccountRepository;
-    private final TransactionRepository transactionRepository;
+    private final TransactionService transactionService;
 
     @Override
     public void deposit(String accountNumber, double amount) {
@@ -29,13 +31,12 @@ public class BankAccountServiceImpl implements BankAccountService {
             account.deposit(amount);
             bankAccountRepository.save(account);
 
-            Transaction transaction = Transaction.builder()
+            transactionService.save(Transaction.builder()
                     .accountNumber(accountNumber)
                     .amount(amount)
                     .date(new Date())
                     .type(TransactionType.DEPOSIT)
-                    .build();
-            transactionRepository.save(transaction);
+                    .build());
         }
     }
 
@@ -47,13 +48,12 @@ public class BankAccountServiceImpl implements BankAccountService {
             if (account.withdraw(amount)) {
                 bankAccountRepository.save(account);
 
-                Transaction transaction = Transaction.builder()
+                transactionService.save(Transaction.builder()
                         .accountNumber(accountNumber)
                         .amount(amount)
                         .date(new Date())
                         .type(TransactionType.WITHDRAWAL)
-                        .build();
-                transactionRepository.save(transaction);
+                        .build());
 
                 return true;
             }
@@ -63,6 +63,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public List<Transaction> getStatement(String accountNumber) {
-        return transactionRepository.findByAccountNumberOrderByDateDesc(accountNumber);
+        return transactionService.getStatement(accountNumber);
     }
 }
